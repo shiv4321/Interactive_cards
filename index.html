@@ -858,9 +858,9 @@ body.dark #page-view.active {
       Create Your First Card 💕
     </button>
     <div class="home-mini-cards">
+      <!--<div class="mini-card"></div>
       <div class="mini-card"></div>
-      <div class="mini-card"></div>
-      <div class="mini-card"></div>
+      <div class="mini-card"></div>-->
     </div>
   </div>
 </div>
@@ -1107,7 +1107,21 @@ function checkURLForCard() {
       const data = JSON.parse(atob(encoded));
       Object.assign(STATE, data);
       buildViewCard();
-      goTo('page-view');
+
+      // Hide everything
+      document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+      document.querySelector('nav').style.display = 'none';
+      document.getElementById('heartsGlobalBg').style.display = 'none';
+
+      // Show only the card page
+      const viewPage = document.getElementById('page-view');
+      viewPage.style.display = 'flex';
+      viewPage.style.flexDirection = 'column';
+      viewPage.style.alignItems = 'center';
+      viewPage.style.minHeight = '100vh';
+      viewPage.style.paddingTop = '40px';
+      viewPage.classList.add('active');
+
     } catch(e) { /* invalid */ }
   }
 }
@@ -1292,7 +1306,11 @@ function buildCardHTML(isInteractive = false) {
       <span class="card-sticker" id="cardMainSticker">${STATE.sticker}</span>
       <div class="card-title">${escHtml(STATE.title)}</div>
       <div class="card-message">${escHtml(STATE.note)}</div>
-      <div class="card-from">— From ${escHtml(f)} 💕</div>
+      <div class="card-from">— From ${escHtml(f)} <div class="card-from">— From ${escHtml(f)} 💕</div>
+${!isInteractive ? '' : `<div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,77,125,0.12);font-size:0.72rem;color:var(--text-muted);text-align:center;line-height:1.6;">
+  Want to create your own personalised card?<br>
+  <a href="https://interactive-cards.onrender.com/" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:600;">💌 interactive-cards.onrender.com</a>
+</div>`}</div> 
       <div class="love-meter">
         <div class="love-meter-label">Love Meter</div>
         <div class="love-meter-bar"><div class="love-meter-fill" style="animation:loveGrow 3s ease-in-out forwards"></div></div>
@@ -1602,4 +1620,3 @@ document.getElementById('shareModal').addEventListener('click', (e) => {
 </script>
 </body>
 </html>
- 
