@@ -572,10 +572,19 @@ textarea { min-height: 90px; }
   box-shadow: var(--shadow-lg);
   position: relative; z-index: 2;
 }
-.view-to-line {
+/*.view-to-line {
   font-size: 0.85rem; color: var(--text-muted); text-align: center;
   margin-bottom: 16px; font-style: italic;
+}*/ 
+.view-to-line {
+  font-size: 1.50rem;      /* ← increased size */
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 18px;
+  font-style: italic;
+  font-weight: 600;        /* ← makes it clearer */
 }
+
 
 /* ===== CONFETTI CANVAS ===== */
 #confetti-canvas {
@@ -1129,9 +1138,11 @@ function checkURLForCard() {
   if (path.startsWith('#/card/')) {
     const encoded = path.slice(7);
     try {
-      const data = JSON.parse(atob(encoded));
+      const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
       Object.assign(STATE, data);
       buildViewCard();
+      document.title = `${STATE.them || 'Someone'} 💌 has a card for you`;
+
 
       // Hide everything
       document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
@@ -1331,7 +1342,7 @@ function buildCardHTML(isInteractive = false) {
       <span class="card-sticker" id="cardMainSticker">${STATE.sticker}</span>
       <div class="card-title">${escHtml(STATE.title)}</div>
       <div class="card-message">${escHtml(STATE.note)}</div>
-      <div class="card-from">— From ${escHtml(f)} <div class="card-from">— From ${escHtml(f)} 💕</div>
+      <div class="card-from"> <div class="card-from">— From ${escHtml(f)} 💕</div>
 ${!isInteractive ? '' : `<div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,77,125,0.12);font-size:0.72rem;color:var(--text-muted);text-align:center;line-height:1.6;">
   Want to create your own personalised card?<br>
   <a href="https://interactive-cards.onrender.com/" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:600;">💌 interactive-cards.onrender.com</a>
