@@ -1141,7 +1141,16 @@ function goToPreview() {
   validateFields();
   buildPreviewPage();
   goTo('page-preview');
+
+  // ✅ auto scroll directly to preview card
+  setTimeout(() => {
+    const card = document.getElementById('previewCardWrap');
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
 }
+
 
 /* ===== URL CHECK ===== */
 function checkURLForCard() {
@@ -1462,7 +1471,7 @@ function growYes(yesBtn, noBtn) {
   noBtn.style.opacity = String(shrinkNoScale * 0.8 + 0.2);
 }
 
-function multiplyYes(yesBtn, container) {
+/*function multiplyYes(yesBtn, container) {
   if (trickState.yesClones.length >= 20) return;
   const clone = yesBtn.cloneNode(true);
   clone.className = 'btn-yes';
@@ -1477,7 +1486,47 @@ function multiplyYes(yesBtn, container) {
   container.style.position = 'relative'; container.style.minHeight = '100px';
   container.appendChild(clone);
   trickState.yesClones.push(clone);
+}*/ 
+
+function multiplyYes(yesBtn, container) {
+  if (trickState.yesClones.length >= 12) return;
+
+  container.style.position = 'relative';
+  container.style.minHeight = '140px';
+
+  const spacing = 70;                // distance between buttons
+  const perRow = 3;                  // buttons per row
+  const index = trickState.yesClones.length;
+
+  const row = Math.floor(index / perRow);
+  const col = index % perRow;
+
+  const offsetX = (col - 1) * spacing;     // center around original
+  const offsetY = (row + 1) * spacing * 0.8;
+
+  const clone = yesBtn.cloneNode(true);
+  clone.className = 'btn-yes';
+  clone.id = '';
+
+  clone.style.cssText = `
+    position: absolute;
+    transform: translate(${offsetX}px, ${offsetY}px) scale(0.9);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: auto;
+  `;
+
+  clone.addEventListener('click', handleYes);
+  container.appendChild(clone);
+
+  requestAnimationFrame(() => {
+    clone.style.opacity = '1';
+    clone.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(1)`;
+  });
+
+  trickState.yesClones.push(clone);
 }
+
 
 function shrinkNo(noBtn) {
   trickState.noScale = Math.max(0.05, trickState.noScale - 0.1);
