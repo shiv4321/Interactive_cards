@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrushCards 💌 — Valentine's Card Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Architects+Daughter&family=Lora:ital,wght@0,400;1,600&family=Montserrat:wght@700;900&family=Space+Grotesk:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg: #fff0f5;
+  --surface: rgba(255,255,255,0.85);
+  --surface2: rgba(255,240,248,0.9);
+  --primary: #ff4d7d;
+  --primary-light: #ff8fb3;
+  --primary-dark: #cc1f52;
+  --accent: #ffb347;
+  --accent2: #c78fff;
+  --text: #2d1a26;
+  --text-muted: #9c7088;
+  --border: rgba(255,77,125,0.18);
+  --shadow: 0 8px 40px rgba(255,77,125,0.15);
+  --shadow-lg: 0 20px 80px rgba(255,77,125,0.25);
+  --radius: 24px;
+  --radius-sm: 14px;
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  /* Theme-specific card vars */
+  --card-bg: linear-gradient(135deg, #fff0f5 0%, #fce4ec 100%);
+  --card-title-font: 'Playfair Display', serif;
+  --card-title-color: #ff4d7d;
+  --card-body-font: 'DM Sans', sans-serif;
+  --card-btn-radius: 50px;
+  --card-btn-bg: linear-gradient(135deg, #ff4d7d, #ff8fb3);
+  --card-btn-no-bg: rgba(255,255,255,0.6);
+  --color-scheme: #ff4d7d;
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.4s, color 0.4s;
+}
+body.dark {
+  --bg: #1a0a14;
+  --surface: rgba(40,15,30,0.85);
+  --surface2: rgba(50,20,38,0.9);
+  --text: #ffd6e8;
+  --text-muted: #c088a4;
+  --border: rgba(255,77,125,0.25);
+  --shadow: 0 8px 40px rgba(0,0,0,0.4);
+  --shadow-lg: 0 20px 80px rgba(0,0,0,0.5);
+  --card-bg: linear-gradient(135deg, #2a0d1e 0%, #1a0a14 100%);
+}
+
+/* ===== CURSOR TRAIL ===== */
+.cursor-heart {
+  position: fixed;
+  pointer-events: none;
+  font-size: 14px;
+  z-index: 9999;
+  animation: cursorFade 1s forwards;
+  transform: translate(-50%, -50%);
+}
+@keyframes cursorFade {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -120%) scale(0.3); }
+}
+
+/* ===== FLOATING HEARTS BG ===== */
+.hearts-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.heart-float {
+  position: absolute;
+  font-size: clamp(12px, 2vw, 24px);
+  animation: floatUp linear infinite;
+  opacity: 0;
+  bottom: -30px;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.5); }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.3; }
+  100% { opacity: 0; transform: translateY(-110vh) rotate(720deg) scale(1.2); }
+}
+
+/* ===== SPARKLE ===== */
+.sparkle {
+  position: fixed; pointer-events: none; z-index: 9998;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--primary);
+  animation: sparklePop 0.6s forwards;
+}
+@keyframes sparklePop {
+  0% { opacity: 1; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(0.5) translateY(-20px); }
+}
+
+/* ===== PAGES ===== */
+.page { display: none; min-height: 100vh; position: relative; z-index: 1; }
+.page.active { display: block; animation: pageFadeIn 0.5s ease; }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== NAV ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,240,248,0.7);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.4s;
+}
+body.dark nav { background: rgba(26,10,20,0.7); }
+.nav-logo {
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  cursor: pointer;
+}
+.nav-actions { display: flex; gap: 12px; align-items: center; }
+.btn-icon {
+  width: 40px; height: 40px; border-radius: 50%; border: none;
+  background: var(--surface); cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-icon:hover { transform: scale(1.1); box-shadow: var(--shadow-lg); }
+
+/* ===== HOMEPAGE ===== */
+#page-home {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 80px 24px 40px;
+}
+.home-center {
+  text-align: center; max-width: 560px; width: 100%;
+  background: var(--surface);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(40px, 8vw, 72px) clamp(24px, 6vw, 64px);
+  box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden;
+}
+.home-center::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,77,125,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.home-emoji {
+  font-size: clamp(3rem, 8vw, 5rem);
+  display: block;
+  animation: heartbeat 1.4s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.18); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.12); }
+  56% { transform: scale(1); }
+}
+.home-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 700; line-height: 1.2;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+.home-sub {
+  color: var(--text-muted); font-size: 1.05rem;
+  line-height: 1.6; margin-bottom: 36px;
+}
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, var(--primary) 0%, #ff85a1 50%, var(--accent2) 100%);
+  background-size: 200% 100%;
+  color: white; font-family: var(--font-body); font-size: 1.1rem; font-weight: 600;
+  border: none; border-radius: 50px; padding: 16px 40px;
+  cursor: pointer; box-shadow: 0 6px 30px rgba(255,77,125,0.4);
+  transition: all 0.3s;
+  animation: btnPulse 2.5s ease-in-out infinite;
+}
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 12px 50px rgba(255,77,125,0.55);
+  background-position: 100% 0;
+}
+.btn-primary:active { transform: scale(0.97); }
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 6px 30px rgba(255,77,125,0.4); }
+  50% { box-shadow: 0 6px 50px rgba(255,77,125,0.7); }
+}
+.home-mini-cards {
+  display: flex; gap: 12px; justify-content: center; margin-top: 32px;
+}
+.mini-card {
+  width: 56px; height: 72px; border-radius: 12px;
+  background: linear-gradient(160deg, var(--primary-light), var(--accent2));
+  opacity: 0.25; animation: miniFloat 3s ease-in-out infinite;
+  box-shadow: 0 4px 20px rgba(255,77,125,0.2);
+}
+.mini-card:nth-child(2) { animation-delay: 0.5s; opacity: 0.35; }
+.mini-card:nth-child(3) { animation-delay: 1s; opacity: 0.2; }
+@keyframes miniFloat {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+/* ===== BUILDER PAGE ===== */
+#page-builder {
+  padding-top: 80px; padding-bottom: 60px;
+  max-width: 1100px; margin: 0 auto;
+  display: none;
+}
+#page-builder.active { display: block; }
+
+.builder-header {
+  text-align: center; padding: 40px 24px 32px;
+}
+.builder-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  background: linear-gradient(135deg, var(--primary), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.builder-header p { color: var(--text-muted); font-size: 1rem; }
+
+.builder-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px; padding: 0 24px;
+}
+@media (max-width: 900px) {
+  .builder-layout { grid-template-columns: 1fr; }
+}
+
+/* Form Panel */
+.form-panel {
+  background: var(--surface); backdrop-filter: blur(20px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px; box-shadow: var(--shadow);
+}
+.form-section { margin-bottom: 28px; }
+.form-section h3 {
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 540px) { .form-grid { grid-template-columns: 1fr; } }
+
+label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+input[type="text"], textarea {
+  width: 100%; padding: 12px 16px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--font-body); font-size: 0.95rem;
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none; resize: none;
+}
+input:focus, textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(255,77,125,0.12);
+}
+textarea { min-height: 90px; }
+
+/* Validation */
+.field-wrap { position: relative; }
+.validation-msg {
+  font-size: 0.75rem; margin-top: 4px; padding: 4px 10px;
+  border-radius: 8px; display: none;
+}
+.validation-msg.error { color: #e04; background: rgba(255,0,60,0.08); display: block; }
+.validation-msg.ok { color: #0c6; background: rgba(0,200,100,0.08); display: block; }
+
+/* Radio trick options */
+.trick-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 540px) { .trick-options { grid-template-columns: 1fr; } }
+.trick-option {
+  border: 2px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 14px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  background: var(--surface2); position: relative; overflow: hidden;
+}
+.trick-option:hover { border-color: var(--primary-light); transform: translateY(-2px); }
+.trick-option.selected { border-color: var(--primary); background: rgba(255,77,125,0.07); }
+.trick-option input[type="radio"] { display: none; }
+.trick-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
+.trick-desc { font-size: 0.75rem; color: var(--text-muted); }
+.trick-demo {
+  margin-top: 8px; height: 32px; display: flex; align-items: center;
+  gap: 6px; font-size: 0.75rem;
+}
+.demo-no, .demo-yes {
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 600;
+}
+.demo-yes { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+.demo-no { background: rgba(150,100,130,0.2); color: var(--text-muted); }
+
+/* Sticker Grid */
+.sticker-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+@media (max-width: 540px) { .sticker-grid { grid-template-columns: repeat(4, 1fr); } }
+.sticker-option {
+  aspect-ratio: 1; border-radius: var(--radius-sm); cursor: pointer;
+  border: 2px solid transparent; background: var(--surface2);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; font-size: 1.6rem;
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+.sticker-option:hover { transform: scale(1.08); border-color: var(--primary-light); }
+.sticker-option.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255,77,125,0.2), 0 4px 20px rgba(255,77,125,0.3);
+  animation: stickerFloat 2s ease-in-out infinite;
+}
+@keyframes stickerFloat {
+  0%, 100% { transform: translateY(0) scale(1.05); }
+  50% { transform: translateY(-4px) scale(1.08); }
+}
+.sticker-name { font-size: 0.6rem; color: var(--text-muted); margin-top: 3px; text-align: center; }
+.sticker-option.selected .sticker-name { color: var(--primary); font-weight: 600; }
+
+/* Theme Grid */
+.theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+@media (max-width: 540px) { .theme-grid { grid-template-columns: repeat(4, 1fr); } }
+.theme-option {
+  aspect-ratio: 3/4; border-radius: 12px; cursor: pointer;
+  border: 2px solid transparent; overflow: hidden; position: relative;
+  transition: transform 0.2s, border-color 0.2s; font-size: 0.65rem;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-end; padding-bottom: 6px; color: white;
+}
+.theme-option:hover { transform: scale(1.05); }
+.theme-option.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(255,77,125,0.4); }
+.theme-bg { position: absolute; inset: 0; z-index: 0; }
+.theme-name { position: relative; z-index: 1; text-align: center; text-shadow: 0 1px 4px rgba(0,0,0,0.5); font-weight: 600; }
+
+/* Color Swatches */
+.color-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.color-option {
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.color-option:hover { transform: scale(1.15); }
+.color-option.selected { border-color: white; box-shadow: 0 0 0 3px var(--primary), 0 4px 16px rgba(0,0,0,0.2); }
+.color-option.selected::after {
+  content: '✓'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 0.9rem;
+}
+
+/* Preview Panel (sticky) */
+.preview-panel {
+  position: sticky; top: 88px; align-self: start;
+  background: var(--surface); backdrop-filter: blur(20px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; box-shadow: var(--shadow);
+}
+.preview-panel h3 {
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--primary);
+  margin-bottom: 16px; text-align: center;
+}
+.card-preview-wrap {
+  border-radius: var(--radius-sm); overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+/* ===== CARD COMPONENT (used in preview, view) ===== */
+.card-component {
+  position: relative; padding: 32px 24px;
+  background: var(--card-bg);
+  min-height: 420px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  overflow: hidden; text-align: center;
+}
+.card-sticker {
+  font-size: 4.5rem;
+  animation: stickerBounce 2s ease-in-out infinite;
+  display: block; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+}
+@keyframes stickerBounce {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50% { transform: scale(1.08) rotate(3deg); }
+}
+.card-title {
+  font-family: var(--card-title-font);
+  font-size: clamp(1.2rem, 4vw, 1.7rem); font-weight: 700;
+  color: var(--card-title-color); line-height: 1.3;
+  text-shadow: 0 2px 12px rgba(255,77,125,0.15);
+}
+.card-message {
+  font-family: var(--card-body-font);
+  font-size: 0.9rem; color: var(--text-muted);
+  line-height: 1.6; max-width: 280px;
+  background: rgba(255,255,255,0.5); border-radius: 12px;
+  padding: 10px 14px; backdrop-filter: blur(8px);
+}
+.card-from {
+  font-size: 0.8rem; color: var(--text-muted); font-style: italic;
+}
+.card-buttons {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  justify-content: center; margin-top: 8px;
+  position: relative; min-height: 60px; width: 100%;
+}
+.btn-yes, .btn-no {
+  padding: 12px 28px; border-radius: var(--card-btn-radius);
+  border: none; cursor: pointer; font-family: var(--font-body);
+  font-size: 0.95rem; font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.btn-yes {
+  background: var(--card-btn-bg); color: white;
+  box-shadow: 0 4px 20px rgba(255,77,125,0.35);
+}
+.btn-yes:hover { transform: scale(1.06); box-shadow: 0 8px 30px rgba(255,77,125,0.5); }
+.btn-no {
+  background: var(--card-btn-no-bg); color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.btn-no:hover { transform: scale(0.97); }
+
+/* Card decorative bg */
+.card-hearts-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.card-heart-float {
+  position: absolute; font-size: 14px;
+  animation: floatUp linear infinite; opacity: 0;
+}
+
+/* Builder CTA */
+.builder-cta {
+  display: flex; gap: 12px; padding: 24px; flex-wrap: wrap;
+}
+.btn-secondary {
+  flex: 1; padding: 14px 20px; border-radius: 50px; border: none;
+  background: var(--surface2); color: var(--text); font-family: var(--font-body);
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  border: 1.5px solid var(--border); transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+.btn-preview {
+  flex: 2; padding: 14px 24px; border-radius: 50px; border: none;
+  background: linear-gradient(135deg, var(--primary), var(--accent2));
+  color: white; font-family: var(--font-body); font-size: 1rem;
+  font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,77,125,0.35);
+  transition: all 0.2s;
+}
+.btn-preview:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(255,77,125,0.5); }
+
+/* ===== PREVIEW PAGE ===== */
+#page-preview {
+  padding-top: 80px; min-height: 100vh;
+  display: none; align-items: flex-start; justify-content: center;
+  padding-bottom: 60px;
+}
+#page-preview.active { display: flex; flex-direction: column; align-items: center; }
+.preview-page-inner {
+  max-width: 520px; width: 100%; padding: 24px;
+}
+.preview-hint {
+  text-align: center; margin-bottom: 20px;
+  font-size: 0.9rem; color: var(--text-muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 50px; padding: 10px 20px;
+  backdrop-filter: blur(12px);
+}
+.preview-card-wrap {
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow-lg); margin-bottom: 24px;
+}
+.preview-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.preview-actions .btn-secondary { flex: 1; }
+.btn-share {
+  flex: 2; padding: 14px 24px; border-radius: 50px; border: none;
+  background: linear-gradient(135deg, #ff4d7d, #c78fff);
+  color: white; font-size: 1rem; font-weight: 600;
+  cursor: pointer; font-family: var(--font-body);
+  box-shadow: 0 4px 20px rgba(199,143,255,0.4);
+  transition: all 0.2s;
+}
+.btn-share:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(199,143,255,0.6); }
+
+/* ===== SHARE MODAL ===== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.active { display: flex; animation: pageFadeIn 0.3s ease; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 36px;
+  max-width: 480px; width: 100%; box-shadow: var(--shadow-lg);
+  position: relative;
+}
+.modal h2 {
+  font-family: var(--font-display); font-size: 1.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+.link-box {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.link-input {
+  flex: 1; padding: 12px 16px; border-radius: var(--radius-sm);
+  background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--text); font-size: 0.85rem; font-family: var(--font-body);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  outline: none;
+}
+.btn-copy {
+  padding: 12px 20px; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border: none; color: white; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s; white-space: nowrap; font-size: 0.9rem;
+}
+.btn-copy:hover { transform: scale(1.05); }
+.share-socials { display: flex; gap: 10px; flex-wrap: wrap; }
+.share-social {
+  flex: 1; min-width: 100px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--surface2);
+  cursor: pointer; font-size: 0.85rem; font-weight: 600;
+  color: var(--text); transition: all 0.2s; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.share-social:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--surface2); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===== VIEW CARD PAGE ===== */
+#page-view {
+  min-height: 100vh; display: none;
+  align-items: center; justify-content: center;
+  padding: 80px 16px 40px; position: relative;
+}
+#page-view.active { display: flex; flex-direction: column; align-items: center; }
+.view-card-wrap {
+  max-width: 480px; width: 100%;
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  position: relative; z-index: 2;
+}
+.view-to-line {
+  font-size: 0.85rem; color: var(--text-muted); text-align: center;
+  margin-bottom: 16px; font-style: italic;
+}
+
+/* ===== CONFETTI CANVAS ===== */
+#confetti-canvas {
+  position: fixed; inset: 0; z-index: 300; pointer-events: none;
+  display: none;
+}
+
+/* ===== YES OVERLAY ===== */
+.yes-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(255,77,125,0.92); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px; color: white; text-align: center;
+  padding: 24px;
+}
+.yes-overlay.active { display: flex; animation: overlayIn 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes overlayIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+.yes-overlay h1 {
+  font-family: var(--font-display); font-size: clamp(2rem, 8vw, 4rem);
+  text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: yesWiggle 0.5s ease-in-out 3;
+}
+@keyframes yesWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg) scale(1.05); }
+  75% { transform: rotate(5deg) scale(1.05); }
+}
+.yes-overlay .yes-sticker { font-size: 5rem; animation: stickerBounce 1.5s ease-in-out infinite; }
+.yes-overlay p { font-size: 1.1rem; opacity: 0.9; max-width: 320px; line-height: 1.6; }
+.btn-close-overlay {
+  padding: 12px 32px; border-radius: 50px;
+  background: white; color: var(--primary);
+  border: none; font-family: var(--font-body); font-size: 1rem;
+  font-weight: 700; cursor: pointer; transition: transform 0.2s;
+  margin-top: 8px;
+}
+.btn-close-overlay:hover { transform: scale(1.05); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--text); color: var(--bg);
+  padding: 12px 24px; border-radius: 50px; font-size: 0.9rem;
+  font-weight: 500; z-index: 500; transition: transform 0.3s ease;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== LOVE METER ===== */
+.love-meter {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; margin-top: 12px; opacity: 0.8;
+}
+.love-meter-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.love-meter-bar {
+  width: 160px; height: 8px; border-radius: 4px;
+  background: rgba(150,100,130,0.2); overflow: hidden;
+}
+.love-meter-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent2));
+  animation: loveGrow 3s ease-in-out forwards;
+  width: 0%;
+}
+@keyframes loveGrow {
+  0% { width: 0%; }
+  60% { width: 100%; }
+  80% { width: 85%; }
+  100% { width: 95%; }
+}
+
+/* ===== THEME FONT OVERRIDES ===== */
+.theme-cute-bear .card-title,
+.theme-pink-piggy .card-title { font-family: 'Poppins', sans-serif; }
+.theme-sweet-hearts .card-title,
+.theme-sweet-hearts .card-message { font-family: 'Lora', serif; }
+.theme-bold-frame .card-title { font-family: 'Montserrat', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+.theme-dreamy .card-title,
+.theme-vintage-tag .card-title,
+.theme-royal .card-title { font-family: 'Playfair Display', serif; }
+.theme-love-letter .card-title,
+.theme-love-letter .card-message { font-family: 'Architects Daughter', cursive; }
+.theme-neon-glow .card-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+.theme-pastel-dream .card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
+
+/* ===== THEME STYLES ===== */
+/* Cute Bear */
+.theme-cute-bear .card-component {
+  background: linear-gradient(160deg, #fff0f5 0%, #fce4ec 60%, #f8bbd0 100%);
+}
+/* Sweet Hearts */
+.theme-sweet-hearts .card-component {
+  background: radial-gradient(ellipse at top, #fff0f8 0%, #fce4ec 100%);
+}
+/* Pink Piggy */
+.theme-pink-piggy .card-component {
+  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);
+}
+/* Bold Frame */
+.theme-bold-frame .card-component {
+  background: #fff;
+  border: 8px solid var(--color-scheme);
+  box-shadow: inset 0 0 0 4px rgba(255,255,255,0.8), 0 0 0 12px var(--color-scheme);
+}
+/* Dreamy */
+.theme-dreamy .card-component {
+  background: linear-gradient(160deg, #fce4ec 0%, #e1bee7 50%, #bbdefb 100%);
+}
+/* Vintage Tag */
+.theme-vintage-tag .card-component {
+  background: #fff9f0;
+  border: 2px dashed var(--color-scheme);
+  box-shadow: 4px 4px 0 var(--color-scheme);
+}
+/* Love Letter */
+.theme-love-letter .card-component {
+  background: #fffef0;
+  border: 1px solid rgba(200,160,0,0.3);
+}
+/* Neon Glow */
+.theme-neon-glow .card-component {
+  background: #0d0d1a;
+  box-shadow: inset 0 0 60px rgba(255,77,125,0.1);
+}
+.theme-neon-glow .card-title { text-shadow: 0 0 20px var(--color-scheme), 0 0 40px var(--color-scheme); }
+.theme-neon-glow .card-message { background: rgba(255,255,255,0.05); color: #ddd; }
+.theme-neon-glow .card-from { color: #999; }
+/* Royal */
+.theme-royal .card-component {
+  background: linear-gradient(160deg, #1a0a2e 0%, #2d1462 100%);
+}
+.theme-royal .card-title, .theme-royal .card-from { color: #ffd700; }
+.theme-royal .card-message { background: rgba(255,215,0,0.08); color: #ddd; }
+/* Pastel Dream */
+.theme-pastel-dream .card-component {
+  background: linear-gradient(135deg, #fff0f8 0%, #f0f8ff 50%, #f8fff0 100%);
+}
+
+/* ===== LOADING ===== */
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid rgba(255,77,125,0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
+
+/* ===== ANIMATED GRADIENT BG FOR VIEW PAGE ===== */
+#page-view.active {
+  background: linear-gradient(270deg, #fff0f5, #fce4ec, #e8d5f5, #fff0f5);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+body.dark #page-view.active {
+  background: linear-gradient(270deg, #1a0a14, #200a20, #100a28, #1a0a14);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== BUILDER PAGE ANIMATED BG ===== */
+#page-builder.active {
+  background: linear-gradient(160deg, var(--bg) 0%, rgba(255,200,230,0.3) 50%, var(--bg) 100%);
+}
+
+/* ===== STICKER PULSE ON HOVER ===== */
+.sticker-option:hover span:first-child {
+  display: inline-block;
+  animation: stickerFloat 0.5s ease-in-out;
+}
+
+/* ===== NICE SECTION DIVIDERS ===== */
+.form-section + .form-section {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+
+/* ===== YES BUTTON GLOW WHEN NO IS HARD TO CLICK ===== */
+.btn-yes.glowing {
+  animation: yesGlow 1s ease-in-out infinite;
+}
+@keyframes yesGlow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(255,77,125,0.4); }
+  50% { box-shadow: 0 0 40px rgba(255,77,125,0.9), 0 0 80px rgba(255,77,125,0.4); }
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+@media (max-width: 600px) {
+  .builder-cta { padding: 16px; }
+  .sticker-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .theme-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* ===== SHAKE ANIMATION ===== */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-1deg); }
+  40% { transform: translateX(8px) rotate(1deg); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+.shake { animation: shake 0.4s ease; }
+
+/* ===== WOBBLE ===== */
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-8deg) scale(1.05); }
+  50% { transform: rotate(6deg) scale(1.08); }
+  80% { transform: rotate(-4deg) scale(1.04); }
+}
+.wobble { animation: wobble 0.5s ease; }
+</style>
+</head>
+<body>
+
+<!-- ===== CURSOR TRAIL (hearts) ===== -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ===== HEARTS BG ===== -->
+<div class="hearts-bg" id="heartsGlobalBg"></div>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="nav-logo" onclick="goHome()">CrushCards 💌</div>
+  <div class="nav-actions">
+    <button class="btn-icon" id="darkToggle" title="Toggle dark mode">🌙</button>
+  </div>
+</nav>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== YES OVERLAY ===== -->
+<div class="yes-overlay" id="yesOverlay">
+  <div class="yes-sticker" id="yesOverlaySticker">🐻</div>
+  <h1>YESSS!! 🎉</h1>
+  <p id="yesOverlayMsg">You made the right choice! 💕</p>
+  <button class="btn-close-overlay" onclick="closeYesOverlay()">Keep Smiling 💖</button>
+</div>
+
+<!-- ===== SHARE MODAL ===== -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeShareModal()">✕</button>
+    <h2>Share Your Card 💌</h2>
+    <p>Your magical link is ready! Share it with that special someone.</p>
+    <div class="link-box">
+      <input type="text" class="link-input" id="shareLink" readonly>
+      <button class="btn-copy" id="copyBtn" onclick="copyLink()">Copy ✨</button>
+    </div>
+    <div class="share-socials">
+      <button class="share-social" onclick="shareWA()">💬 WhatsApp</button>
+      <button class="share-social" onclick="shareTwitter()">🐦 Twitter</button>
+      <button class="share-social" onclick="shareFB()">📘 Facebook</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: HOME ===== -->
+<div class="page active" id="page-home">
+  <div class="home-center">
+    <span class="home-emoji">💌</span>
+    <h1 class="home-title">No cards yet ✨</h1>
+    <p class="home-sub">Create your first Valentine's card and share it with someone special. They'll love it (or they'll click "No" a lot 😈)</p>
+    <button class="btn-primary" onclick="goTo('page-builder')">
+      Create Your First Card 💕
+    </button>
+    <div class="home-mini-cards">
+      <div class="mini-card"></div>
+      <div class="mini-card"></div>
+      <div class="mini-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: BUILDER ===== -->
+<div class="page" id="page-builder">
+  <div class="builder-header">
+    <h1>Create Your Card 💌</h1>
+    <p>Customize every detail, then preview it</p>
+  </div>
+
+  <div class="builder-layout">
+    <!-- ===== FORM ===== -->
+    <div>
+      <div class="form-panel">
+
+        <!-- Names & Message -->
+        <div class="form-section">
+          <h3>💕 Names &amp; Message</h3>
+          <div class="form-grid">
+            <div class="field-wrap">
+              <label>Their Name</label>
+              <input type="text" id="f-them" placeholder="Sarah" oninput="livePreview()" maxlength="30">
+              <div class="validation-msg" id="v-them"></div>
+            </div>
+            <div class="field-wrap">
+              <label>Your Name</label>
+              <input type="text" id="f-from" placeholder="Alex" oninput="livePreview()" maxlength="30">
+              <div class="validation-msg" id="v-from"></div>
+            </div>
+          </div>
+          <div class="field-wrap" style="margin-top:14px">
+            <label>Card Title</label>
+            <input type="text" id="f-title" placeholder="Will you be my Valentine?" oninput="livePreview()" maxlength="60">
+          </div>
+          <div class="field-wrap" style="margin-top:14px">
+            <label>Sweet Note 🍬</label>
+            <textarea id="f-note" placeholder="I promise to buy you snacks and send you cute cat memes!" oninput="livePreview()"></textarea>
+          </div>
+        </div>
+
+        <!-- No Trick -->
+        <div class="form-section">
+          <h3>😈 "No" Button Trick</h3>
+          <div class="trick-options" id="trickOptions">
+            <label class="trick-option selected" onclick="selectTrick(this,'teleport')">
+              <input type="radio" name="trick" value="teleport" checked>
+              <div class="trick-label">🌀 Teleporting No</div>
+              <div class="trick-desc">Jumps to random spot</div>
+              <div class="trick-demo">
+                <span class="demo-yes">Yes!</span>
+                <span class="demo-no" style="animation: shake 0.4s infinite;">Nope</span>
+              </div>
+            </label>
+            <label class="trick-option" onclick="selectTrick(this,'grow-yes')">
+              <input type="radio" name="trick" value="grow-yes">
+              <div class="trick-label">🌱 Growing Yes</div>
+              <div class="trick-desc">Yes grows bigger</div>
+              <div class="trick-demo">
+                <span class="demo-yes" style="transform:scale(1.3)">Yes!!</span>
+                <span class="demo-no" style="font-size:0.6rem">No</span>
+              </div>
+            </label>
+            <label class="trick-option" onclick="selectTrick(this,'multiply')">
+              <input type="radio" name="trick" value="multiply">
+              <div class="trick-label">✨ Multiplying Yes</div>
+              <div class="trick-desc">Yes clones appear</div>
+              <div class="trick-demo">
+                <span class="demo-yes">Yes</span>
+                <span class="demo-yes" style="opacity:0.6;font-size:0.65rem">Yes</span>
+                <span class="demo-yes" style="opacity:0.4;font-size:0.55rem">Yes</span>
+              </div>
+            </label>
+            <label class="trick-option" onclick="selectTrick(this,'shrink')">
+              <input type="radio" name="trick" value="shrink">
+              <div class="trick-label">🫥 Shrinking No</div>
+              <div class="trick-desc">No fades away</div>
+              <div class="trick-demo">
+                <span class="demo-yes">Yes!</span>
+                <span class="demo-no" style="transform:scale(0.5);opacity:0.4;">No..</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Sticker -->
+        <div class="form-section">
+          <h3>🧸 Card Sticker</h3>
+          <div class="sticker-grid" id="stickerGrid">
+          </div>
+        </div>
+
+        <!-- Celebration Sticker -->
+        <div class="form-section">
+          <h3>🎉 "Yes!" Celebration</h3>
+          <div class="sticker-grid" id="celebGrid">
+          </div>
+        </div>
+
+        <!-- Theme -->
+        <div class="form-section">
+          <h3>🎨 Theme</h3>
+          <div class="theme-grid" id="themeGrid"></div>
+        </div>
+
+        <!-- Colors -->
+        <div class="form-section">
+          <h3>🌈 Color Scheme</h3>
+          <div class="color-grid" id="colorGrid"></div>
+        </div>
+
+      </div>
+
+      <!-- Builder CTA -->
+      <div class="builder-cta">
+        <button class="btn-secondary" onclick="goHome()">← Home</button>
+        <button class="btn-preview" onclick="goToPreview()">Preview Card 👀</button>
+      </div>
+    </div>
+
+    <!-- ===== LIVE PREVIEW PANEL ===== -->
+    <div>
+      <div class="preview-panel">
+        <h3>📱 Live Preview</h3>
+        <div class="card-preview-wrap">
+          <div class="card-component theme-cute-bear" id="liveCardPreview">
+            <div class="card-hearts-bg" id="liveCardHeartsInternal"></div>
+            <span class="card-sticker" id="liveSticker">🐻</span>
+            <div class="card-title" id="liveTitle">Will you be my Valentine?</div>
+            <div class="card-message" id="liveNote">I promise to buy you snacks and send you cute cat memes!</div>
+            <div class="card-from" id="liveFrom">— From Alex 💕</div>
+            <div class="love-meter">
+              <div class="love-meter-label">Love Meter</div>
+              <div class="love-meter-bar"><div class="love-meter-fill"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: PREVIEW ===== -->
+<div class="page" id="page-preview">
+  <div class="preview-page-inner">
+    <div class="preview-hint">💡 Try clicking the buttons! This is what they'll see.</div>
+    <div class="preview-card-wrap" id="previewCardWrap"></div>
+    <div class="preview-actions">
+      <button class="btn-secondary" onclick="goTo('page-builder')">← Edit</button>
+      <button class="btn-share" onclick="generateLink()">Generate Share Link 🔗</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: VIEW CARD ===== -->
+<div class="page" id="page-view">
+  <div class="view-to-line" id="viewToLine">To: Sarah 💌</div>
+  <div class="view-card-wrap" id="viewCardWrap"></div>
+  <div style="height:32px"></div>
+</div>
+
+
+<script>
+/* ===== STATE ===== */
+const STATE = {
+  them: '', from: '', title: 'Will you be my Valentine?',
+  note: 'I promise to buy you snacks and send you cute cat memes!',
+  trick: 'teleport',
+  sticker: '🐻', celebSticker: '🎊',
+  theme: 'cute-bear', color: '#ff4d7d'
+};
+
+/* ===== STICKERS DATA ===== */
+const STICKERS = [
+  { emoji: '🐻', name: 'Love Bear' }, { emoji: '🐱', name: 'Cute Cat' },
+  { emoji: '🐰', name: 'Heart Bunny' }, { emoji: '💌', name: 'Love Letter' },
+  { emoji: '💃', name: 'Dancing Hearts' }, { emoji: '🐻‍❄️', name: 'Kissy Bear' },
+  { emoji: '🤗', name: 'Hug Bears' }, { emoji: '🐧', name: 'Love Penguin' },
+  { emoji: '🌹', name: 'Roses' }, { emoji: '🐶', name: 'Puppy Love' },
+  { emoji: '✨', name: 'Heart Sparkle' }, { emoji: '😊', name: 'Shy Blush' },
+  { emoji: '😽', name: 'Cat Kiss' }, { emoji: '🍡', name: 'Mochi Cat' },
+  { emoji: '🛌', name: 'Comfy Pillow' }, { emoji: '💕', name: 'Many Love' },
+  { emoji: '💑', name: 'My Lover' }, { emoji: '📱', name: 'Phone Love' },
+  { emoji: '🥹', name: 'I Miss You' }, { emoji: '😸', name: 'Happy Cat' }
+];
+
+/* ===== THEMES DATA ===== */
+const THEMES = [
+  { id: 'cute-bear', name: 'Cute Bear', bg: 'linear-gradient(160deg,#fce4ec,#f8bbd0)', font: 'Poppins' },
+  { id: 'sweet-hearts', name: 'Sweet Hearts', bg: 'radial-gradient(ellipse,#fff0f8,#fce4ec)', font: 'Lora' },
+  { id: 'pink-piggy', name: 'Pink Piggy', bg: 'linear-gradient(135deg,#fce4ec,#f48fb1)', font: 'Poppins' },
+  { id: 'bold-frame', name: 'Bold Frame', bg: '#fff', font: 'Montserrat' },
+  { id: 'dreamy', name: 'Dreamy', bg: 'linear-gradient(160deg,#fce4ec,#e1bee7,#bbdefb)', font: 'Playfair Display' },
+  { id: 'vintage-tag', name: 'Vintage Tag', bg: '#fff9f0', font: 'Playfair Display' },
+  { id: 'love-letter', name: 'Love Letter', bg: '#fffef0', font: 'Architects Daughter' },
+  { id: 'neon-glow', name: 'Neon Glow', bg: '#0d0d1a', font: 'Space Grotesk' },
+  { id: 'royal', name: 'Royal', bg: 'linear-gradient(160deg,#1a0a2e,#2d1462)', font: 'Playfair Display' },
+  { id: 'pastel-dream', name: 'Pastel Dream', bg: 'linear-gradient(135deg,#fff0f8,#f0f8ff,#f8fff0)', font: 'Plus Jakarta Sans' }
+];
+
+/* ===== COLORS DATA ===== */
+const COLORS = [
+  { name: 'Classic Pink', hex: '#ff4d7d' }, { name: 'Rose Red', hex: '#e53935' },
+  { name: 'Purple Love', hex: '#8b5cf6' }, { name: 'Coral Crush', hex: '#ff6b6b' },
+  { name: 'Hot Pink', hex: '#ff0066' }, { name: 'Fuchsia', hex: '#e91e8c' },
+  { name: 'Violet', hex: '#7c3aed' }, { name: 'Ocean Blue', hex: '#0ea5e9' }
+];
+
+/* ===== TRICK STATE ===== */
+let trickState = { noClicks: 0, yesClones: [], noScale: 1, yesScale: 1 };
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  initHeartsBg();
+  initCursorTrail();
+  buildStickerGrids();
+  buildThemeGrid();
+  buildColorGrid();
+  loadDraft();
+  checkURLForCard();
+  setInterval(pulseLoveMeter, 5000);
+});
+
+/* ===== PAGE ROUTING ===== */
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goHome() { goTo('page-home'); }
+
+function goToPreview() {
+  validateFields();
+  buildPreviewPage();
+  goTo('page-preview');
+}
+
+/* ===== URL CHECK ===== */
+function checkURLForCard() {
+  const path = window.location.hash;
+  if (path.startsWith('#/card/')) {
+    const encoded = path.slice(7);
+    try {
+      const data = JSON.parse(atob(encoded));
+      Object.assign(STATE, data);
+      buildViewCard();
+      goTo('page-view');
+    } catch(e) { /* invalid */ }
+  }
+}
+
+/* ===== FLOATING HEARTS BG ===== */
+function initHeartsBg() {
+  const bg = document.getElementById('heartsGlobalBg');
+  const hearts = ['💕','💗','💓','💞','🌸','✨','💫','🌷'];
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('span');
+    el.className = 'heart-float';
+    el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.animationDuration = (8 + Math.random() * 12) + 's';
+    el.style.animationDelay = (Math.random() * 10) + 's';
+    el.style.fontSize = (10 + Math.random() * 16) + 'px';
+    bg.appendChild(el);
+  }
+}
+
+function addCardHearts(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const hearts = ['💕','💗','🌸','✨'];
+  for (let i = 0; i < 8; i++) {
+    const el = document.createElement('span');
+    el.className = 'card-heart-float';
+    el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.animationDuration = (5 + Math.random() * 8) + 's';
+    el.style.animationDelay = (Math.random() * 6) + 's';
+    el.style.fontSize = (8 + Math.random() * 10) + 'px';
+    container.appendChild(el);
+  }
+}
+
+/* ===== CURSOR TRAIL ===== */
+function initCursorTrail() {
+  const hearts = ['💕','💗','💓','💖','✨'];
+  let lastTime = 0;
+  document.addEventListener('mousemove', (e) => {
+    const now = Date.now();
+    if (now - lastTime < 80) return;
+    lastTime = now;
+    const el = document.createElement('div');
+    el.className = 'cursor-heart';
+    el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    el.style.left = e.clientX + 'px';
+    el.style.top = e.clientY + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  });
+}
+
+/* ===== DARK MODE ===== */
+document.getElementById('darkToggle').addEventListener('click', () => {
+  document.body.classList.toggle('dark');
+  document.getElementById('darkToggle').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+});
+
+/* ===== BUILD STICKER GRIDS ===== */
+function buildStickerGrids() {
+  buildStickerGrid('stickerGrid', 'sticker');
+  buildStickerGrid('celebGrid', 'celeb');
+}
+
+function buildStickerGrid(containerId, type) {
+  const grid = document.getElementById(containerId);
+  STICKERS.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'sticker-option' + (i === 0 && type === 'sticker' ? ' selected' : '');
+    el.innerHTML = `<span>${s.emoji}</span><span class="sticker-name">${s.name}</span>`;
+    el.addEventListener('click', () => {
+      grid.querySelectorAll('.sticker-option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      if (type === 'sticker') { STATE.sticker = s.emoji; }
+      else { STATE.celebSticker = s.emoji; }
+      livePreview(); saveDraft();
+    });
+    grid.appendChild(el);
+  });
+}
+
+/* ===== BUILD THEME GRID ===== */
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  THEMES.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'theme-option' + (i === 0 ? ' selected' : '');
+    el.innerHTML = `<div class="theme-bg" style="background:${t.bg}"></div><div class="theme-name">${t.name}</div>`;
+    el.addEventListener('click', () => {
+      grid.querySelectorAll('.theme-option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      STATE.theme = t.id;
+      livePreview(); saveDraft();
+    });
+    grid.appendChild(el);
+  });
+}
+
+/* ===== BUILD COLOR GRID ===== */
+function buildColorGrid() {
+  const grid = document.getElementById('colorGrid');
+  COLORS.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'color-option' + (i === 0 ? ' selected' : '');
+    el.style.background = c.hex;
+    el.title = c.name;
+    el.addEventListener('click', () => {
+      grid.querySelectorAll('.color-option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      STATE.color = c.hex;
+      applyColor(c.hex); saveDraft();
+    });
+    grid.appendChild(el);
+  });
+}
+
+function applyColor(hex) {
+  document.documentElement.style.setProperty('--color-scheme', hex);
+  document.documentElement.style.setProperty('--primary', hex);
+  // adjust light variant
+  document.documentElement.style.setProperty('--card-title-color', hex);
+}
+
+/* ===== TRICK SELECTION ===== */
+function selectTrick(el, trick) {
+  document.querySelectorAll('.trick-option').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  STATE.trick = trick;
+  saveDraft();
+}
+
+/* ===== LIVE PREVIEW ===== */
+function livePreview() {
+  STATE.them = document.getElementById('f-them').value || '';
+  STATE.from = document.getElementById('f-from').value || '';
+  STATE.title = document.getElementById('f-title').value || 'Will you be my Valentine?';
+  STATE.note = document.getElementById('f-note').value || 'I promise to buy you snacks and send you cute cat memes!';
+
+  document.getElementById('liveSticker').textContent = STATE.sticker;
+  document.getElementById('liveTitle').textContent = STATE.title;
+  document.getElementById('liveNote').textContent = STATE.note;
+  document.getElementById('liveFrom').textContent = STATE.from ? `— From ${STATE.from} 💕` : '— From your secret admirer 💕';
+
+  const card = document.getElementById('liveCardPreview');
+  card.className = `card-component theme-${STATE.theme}`;
+
+  saveDraft();
+}
+
+/* ===== VALIDATION ===== */
+function validateFields() {
+  const them = document.getElementById('f-them').value.trim();
+  const from = document.getElementById('f-from').value.trim();
+  const vThem = document.getElementById('v-them');
+  const vFrom = document.getElementById('v-from');
+
+  let ok = true;
+  if (!them) {
+    vThem.textContent = "💌 Who is this for? Add their name!";
+    vThem.className = 'validation-msg error'; ok = false;
+  } else { vThem.className = 'validation-msg ok'; vThem.textContent = '✓ Lovely name!'; }
+
+  if (!from) {
+    vFrom.textContent = "✍️ Don't be shy, add your name!";
+    vFrom.className = 'validation-msg error'; ok = false;
+  } else { vFrom.className = 'validation-msg ok'; vFrom.textContent = '✓ So sweet!'; }
+
+  return ok;
+}
+
+/* ===== BUILD CARD HTML ===== */
+function buildCardHTML(isInteractive = false) {
+  const t = STATE.them || 'Sweetheart';
+  const f = STATE.from || 'Your Secret Admirer';
+  const containerId = isInteractive ? 'intCardHeartsInternal' : 'staticCardHeartsInternal' + Date.now();
+
+  return `
+    <div class="card-component theme-${STATE.theme}" style="--color-scheme:${STATE.color};--card-title-color:${STATE.color}" id="theCardComp">
+      <div class="card-hearts-bg" id="${containerId}"></div>
+      <span class="card-sticker" id="cardMainSticker">${STATE.sticker}</span>
+      <div class="card-title">${escHtml(STATE.title)}</div>
+      <div class="card-message">${escHtml(STATE.note)}</div>
+      <div class="card-from">— From ${escHtml(f)} 💕</div>
+      <div class="love-meter">
+        <div class="love-meter-label">Love Meter</div>
+        <div class="love-meter-bar"><div class="love-meter-fill" style="animation:loveGrow 3s ease-in-out forwards"></div></div>
+      </div>
+      ${isInteractive ? `
+      <div class="card-buttons" id="cardButtons">
+        <button class="btn-yes" id="yesBtn" onclick="handleYes()">Yes! 💖</button>
+        <button class="btn-no" id="noBtn" onclick="handleNo()">No 🙃</button>
+      </div>` : `
+      <div class="card-buttons" style="pointer-events:none;opacity:0.6">
+        <button class="btn-yes">Yes! 💖</button>
+        <button class="btn-no">No 🙃</button>
+      </div>`}
+    </div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ===== BUILD PREVIEW PAGE ===== */
+function buildPreviewPage() {
+  trickState = { noClicks: 0, yesClones: [], noScale: 1, yesScale: 1 };
+  const wrap = document.getElementById('previewCardWrap');
+  wrap.innerHTML = buildCardHTML(true);
+  setTimeout(() => addCardHearts('intCardHeartsInternal'), 100);
+}
+
+/* ===== BUILD VIEW CARD PAGE ===== */
+function buildViewCard() {
+  trickState = { noClicks: 0, yesClones: [], noScale: 1, yesScale: 1 };
+  const wrap = document.getElementById('viewCardWrap');
+  wrap.innerHTML = buildCardHTML(true);
+  const toLine = document.getElementById('viewToLine');
+  toLine.textContent = `To: ${STATE.them || 'Sweetheart'} 💌`;
+  setTimeout(() => addCardHearts('intCardHeartsInternal'), 100);
+}
+
+/* ===== TRICK LOGIC ===== */
+const NO_MESSAGES = [
+  "That's not the right answer! 😤",
+  "Come on... you don't mean that! 🥺",
+  "Are you sure? Think again! 💭",
+  "The Yes button is RIGHT THERE 👀",
+  "Every No makes the Yes bigger 😈",
+  "You're running out of No button! 😏",
+  "Please reconsider... 🙏",
+  "The snacks offer still stands! 🍿",
+  "Wrong choice, try again 💅",
+  "You can do this! Just say Yes! 🌈"
+];
+
+function handleNo() {
+  trickState.noClicks++;
+  const noBtn = document.getElementById('noBtn');
+  const yesBtn = document.getElementById('yesBtn');
+  const container = document.getElementById('cardButtons');
+
+  if (trickState.noClicks % 5 === 0 && trickState.noClicks >= 5) {
+    document.querySelector('#theCardComp').classList.add('shake');
+    setTimeout(() => document.querySelector('#theCardComp').classList.remove('shake'), 400);
+  }
+
+  // Show funny toast
+  if (trickState.noClicks <= NO_MESSAGES.length) {
+    showToast(NO_MESSAGES[trickState.noClicks - 1], 2000);
+  }
+
+  switch(STATE.trick) {
+    case 'teleport': teleportNo(noBtn, container); break;
+    case 'grow-yes': growYes(yesBtn, noBtn); break;
+    case 'multiply': multiplyYes(yesBtn, container); break;
+    case 'shrink': shrinkNo(noBtn); break;
+  }
+  noBtn.classList.add('wobble');
+  setTimeout(() => noBtn.classList.remove('wobble'), 500);
+}
+
+function teleportNo(noBtn, container) {
+  const w = container.offsetWidth, h = container.offsetHeight;
+  const bw = noBtn.offsetWidth, bh = noBtn.offsetHeight;
+  const maxX = Math.max(0, w - bw - 10), maxY = Math.max(0, h - bh - 10);
+  const rx = Math.floor(Math.random() * maxX);
+  const ry = Math.floor(Math.random() * maxY);
+  noBtn.style.position = 'absolute';
+  noBtn.style.transition = 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+  noBtn.style.left = rx + 'px'; noBtn.style.top = ry + 'px';
+  container.style.position = 'relative'; container.style.height = '70px';
+  // Make Yes glow after 3 clicks
+  if (trickState.noClicks >= 3) {
+    const yesBtn = document.getElementById('yesBtn');
+    if (yesBtn) yesBtn.classList.add('glowing');
+  }
+}
+
+function growYes(yesBtn, noBtn) {
+  trickState.yesScale = Math.min(2.2, trickState.yesScale + 0.18);
+  yesBtn.style.transform = `scale(${trickState.yesScale})`;
+  yesBtn.style.boxShadow = `0 0 ${trickState.yesScale * 15}px rgba(255,77,125,0.6)`;
+  const shrinkNoScale = Math.max(0.2, 1 - trickState.noClicks * 0.08);
+  noBtn.style.transform = `scale(${shrinkNoScale})`;
+  noBtn.style.opacity = String(shrinkNoScale * 0.8 + 0.2);
+}
+
+function multiplyYes(yesBtn, container) {
+  if (trickState.yesClones.length >= 20) return;
+  const clone = yesBtn.cloneNode(true);
+  clone.className = 'btn-yes';
+  clone.id = '';
+  const angle = Math.random() * 360;
+  const dist = 30 + Math.random() * 60;
+  const rx = Math.cos(angle) * dist;
+  const ry = Math.sin(angle) * dist;
+  clone.style.cssText = `position:absolute;transform:translate(${rx}px,${ry}px) scale(${0.5 + Math.random()*0.5});
+    opacity:0.7;transition:all 0.4s;animation:stickerBounce ${1+Math.random()}s ease-in-out infinite;pointer-events:none;`;
+  clone.addEventListener('click', handleYes);
+  container.style.position = 'relative'; container.style.minHeight = '100px';
+  container.appendChild(clone);
+  trickState.yesClones.push(clone);
+}
+
+function shrinkNo(noBtn) {
+  trickState.noScale = Math.max(0.05, trickState.noScale - 0.1);
+  noBtn.style.transform = `scale(${trickState.noScale})`;
+  noBtn.style.opacity = String(Math.max(0.05, trickState.noScale));
+  if (trickState.noScale <= 0.1) {
+    noBtn.style.pointerEvents = 'none';
+    showToast('No button has disappeared! 😈 Just say Yes!');
+  }
+}
+
+/* ===== YES HANDLER ===== */
+function handleYes() {
+  launchConfetti();
+  const overlay = document.getElementById('yesOverlay');
+  document.getElementById('yesOverlaySticker').textContent = STATE.celebSticker || '🎊';
+  document.getElementById('yesOverlayMsg').textContent =
+    `${STATE.them || 'You'} said YES to ${STATE.from || 'someone special'}! 💕 This is the best day ever!`;
+  overlay.classList.add('active');
+  spawnSparkles(50);
+}
+
+function closeYesOverlay() {
+  document.getElementById('yesOverlay').classList.remove('active');
+  stopConfetti();
+}
+
+/* ===== CONFETTI ===== */
+let confettiRunning = false, confettiRAF = null;
+const confettiColors = ['#ff4d7d','#ff8fb3','#c78fff','#ffb347','#fff','#ff0066','#00ccff'];
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  confettiRunning = true;
+  const particles = [];
+  for (let i = 0; i < 180; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 200,
+      size: 4 + Math.random() * 8,
+      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 8,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle'
+    });
+  }
+  function draw() {
+    if (!confettiRunning) { ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'circle') { ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
+      else { ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2); }
+      ctx.restore();
+      p.x += p.vx; p.y += p.vy;
+      p.rot += p.rotV;
+      p.vy += 0.08; // gravity
+      if (p.y > canvas.height + 20) { p.y = -10; p.x = Math.random() * canvas.width; }
+    });
+    confettiRAF = requestAnimationFrame(draw);
+  }
+  draw();
+  setTimeout(stopConfetti, 6000);
+}
+
+function stopConfetti() {
+  confettiRunning = false;
+  if (confettiRAF) cancelAnimationFrame(confettiRAF);
+  setTimeout(() => { document.getElementById('confetti-canvas').style.display = 'none'; }, 300);
+}
+
+/* ===== SPARKLES ===== */
+function spawnSparkles(count) {
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'sparkle';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.top = Math.random() * 100 + 'vh';
+      el.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 600);
+    }, i * 30);
+  }
+}
+
+/* ===== LOVE METER PULSE ===== */
+function pulseLoveMeter() {
+  const fills = document.querySelectorAll('.love-meter-fill');
+  fills.forEach(f => {
+    f.style.animation = 'none';
+    setTimeout(() => { f.style.animation = 'loveGrow 3s ease-in-out forwards'; }, 50);
+  });
+}
+
+/* ===== GENERATE SHARE LINK ===== */
+function generateLink() {
+  if (!validateFields()) {
+    showToast('💕 Fill in the names first!');
+    goTo('page-builder');
+    return;
+  }
+  const data = JSON.stringify(STATE);
+  const encoded = btoa(unescape(encodeURIComponent(data)));
+  const link = `${window.location.origin}${window.location.pathname}#/card/${encoded}`;
+  document.getElementById('shareLink').value = link;
+  document.getElementById('shareModal').classList.add('active');
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('active');
+}
+
+function copyLink() {
+  const inp = document.getElementById('shareLink');
+  navigator.clipboard.writeText(inp.value).then(() => {
+    document.getElementById('copyBtn').textContent = 'Copied! ✅';
+    showToast('Link copied to clipboard! 💕');
+    setTimeout(() => { document.getElementById('copyBtn').textContent = 'Copy ✨'; }, 2000);
+  }).catch(() => {
+    inp.select(); document.execCommand('copy');
+    showToast('Link copied! 💕');
+  });
+}
+
+function shareWA() {
+  const link = document.getElementById('shareLink').value;
+  window.open(`https://wa.me/?text=I%20made%20you%20a%20Valentine%27s%20card%20%F0%9F%92%8C%20${encodeURIComponent(link)}`, '_blank');
+}
+function shareTwitter() {
+  const link = document.getElementById('shareLink').value;
+  window.open(`https://twitter.com/intent/tweet?text=I%20made%20you%20a%20Valentine%27s%20card%20%F0%9F%92%8C&url=${encodeURIComponent(link)}`, '_blank');
+}
+function shareFB() {
+  const link = document.getElementById('shareLink').value;
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
+}
+
+/* ===== TOAST ===== */
+function showToast(msg, duration = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ===== DRAFT SAVE/LOAD ===== */
+function saveDraft() {
+  try { localStorage.setItem('crushcards_draft', JSON.stringify(STATE)); } catch(e) {}
+}
+
+function loadDraft() {
+  try {
+    const draft = localStorage.getItem('crushcards_draft');
+    if (draft) {
+      const d = JSON.parse(draft);
+      Object.assign(STATE, d);
+      document.getElementById('f-them').value = STATE.them;
+      document.getElementById('f-from').value = STATE.from;
+      document.getElementById('f-title').value = STATE.title;
+      document.getElementById('f-note').value = STATE.note;
+      applyColor(STATE.color || '#ff4d7d');
+      showToast('Draft restored! ✨');
+      livePreview();
+    }
+  } catch(e) {}
+}
+
+/* ===== WINDOW RESIZE ===== */
+window.addEventListener('resize', () => {
+  const canvas = document.getElementById('confetti-canvas');
+  if (canvas.style.display !== 'none') { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+});
+
+/* ===== CLOSE MODAL ON BACKDROP CLICK ===== */
+document.getElementById('shareModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('shareModal')) closeShareModal();
+});
+</script>
+</body>
+</html>
+ 
